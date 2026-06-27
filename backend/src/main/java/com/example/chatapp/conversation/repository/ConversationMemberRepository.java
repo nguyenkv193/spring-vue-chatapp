@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface ConversationMemberRepository extends JpaRepository<ConversationMember, UUID> {
 
     List<ConversationMember> findByUser_Id(UUID userId);
+
+    boolean existsByConversation_IdAndUser_Id(UUID conversationId, UUID userId);
 }

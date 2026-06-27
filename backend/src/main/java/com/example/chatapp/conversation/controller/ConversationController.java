@@ -3,9 +3,13 @@ package com.example.chatapp.conversation.controller;
 import com.example.chatapp.common.constants.ApplicationConstants;
 import com.example.chatapp.common.response.ApiResponse;
 import com.example.chatapp.conversation.dto.ConversationSummaryResponse;
+import com.example.chatapp.conversation.dto.CreateConversationRequest;
 import com.example.chatapp.conversation.service.ConversationService;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +30,17 @@ public class ConversationController {
         return ApiResponse.success(
                 "Conversations loaded successfully.",
                 conversationService.getCurrentUserConversations(authentication)
+        );
+    }
+
+    @PostMapping
+    public ApiResponse<ConversationSummaryResponse> create(
+            @Valid @RequestBody CreateConversationRequest request,
+            Authentication authentication
+    ) {
+        return ApiResponse.success(
+                "Conversation created successfully.",
+                conversationService.createConversation(request, authentication)
         );
     }
 }
