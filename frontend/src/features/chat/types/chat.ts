@@ -10,6 +10,11 @@ export interface ConversationSummary {
   lastMessagePreview: string | null
 }
 
+export interface CreateConversationPayload {
+  title: string
+  type?: 'DIRECT' | 'GROUP'
+}
+
 export interface ChatMessage {
   id: string
   conversationId: string

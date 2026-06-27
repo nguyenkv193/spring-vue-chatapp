@@ -9,6 +9,17 @@ type ConnectionHooks = {
   onError: (message: string) => void
 }
 
+type RealtimeMessagePayload = {
+  messageId?: string
+  id?: string
+  conversationId: string
+  senderId: string | null
+  senderDisplayName: string
+  content: string
+  messageType: ChatMessage['messageType']
+  sentAt: string
+}
+
 class StompChatClient {
   private client: Client | null = null
   private conversationSubscription: StompSubscription | null = null
@@ -49,7 +60,16 @@ class StompChatClient {
     this.conversationSubscription = this.client.subscribe(
       `/topic/conversations/${conversationId}`,
       (frame: IMessage) => {
-        onMessage(JSON.parse(frame.body) as ChatMessage)
+        const payload = JSON.parse(frame.body) as RealtimeMessagePayload
+        onMessage({
+          id: payload.id ?? payload.messageId ?? crypto.randomUUID(),
+          conversationId: payload.conversationId,
+          senderId: payload.senderId,
+          senderDisplayName: payload.senderDisplayName,
+          content: payload.content,
+          messageType: payload.messageType,
+          sentAt: payload.sentAt
+        })
       }
     )
   }

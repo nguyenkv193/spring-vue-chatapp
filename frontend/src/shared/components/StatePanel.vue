@@ -1,8 +1,15 @@
 <template>
   <section class="state-panel" :data-tone="tone">
-    <p class="state-panel__eyebrow">{{ eyebrow }}</p>
+    <span class="state-panel__label">{{ eyebrow }}</span>
     <h2 class="state-panel__title">{{ title }}</h2>
     <p class="state-panel__body">{{ body }}</p>
+
+    <div v-if="tone === 'loading'" class="state-panel__skeleton" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
     <button
       v-if="actionLabel"
       class="state-panel__action"
@@ -21,7 +28,7 @@ withDefaults(
     title: string
     body: string
     actionLabel?: string
-    tone?: 'neutral' | 'error'
+    tone?: 'neutral' | 'empty' | 'loading' | 'error'
   }>(),
   {
     actionLabel: undefined,
@@ -37,44 +44,98 @@ defineEmits<{
 <style scoped>
 .state-panel {
   display: grid;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(11, 18, 32, 0.7);
-  backdrop-filter: blur(20px);
+  gap: 0.8rem;
+  align-content: start;
+  width: 100%;
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  min-height: 100%;
+}
+
+.state-panel[data-tone='empty'] {
+  background: rgba(37, 99, 235, 0.05);
 }
 
 .state-panel[data-tone='error'] {
-  border-color: rgba(255, 106, 92, 0.35);
+  background: var(--color-danger-soft);
+  border-color: rgba(180, 35, 24, 0.12);
 }
 
-.state-panel__eyebrow {
+.state-panel__label,
+.state-panel__title,
+.state-panel__body {
   margin: 0;
+}
+
+.state-panel__label {
+  justify-self: start;
+  padding: 0.38rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   font-size: 0.78rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .state-panel__title {
-  margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.35rem;
 }
 
 .state-panel__body {
-  margin: 0;
   color: var(--color-text-muted);
+  max-width: 46ch;
+}
+
+.state-panel__skeleton {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.state-panel__skeleton span {
+  display: block;
+  height: 0.72rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(37, 99, 235, 0.08),
+      rgba(37, 99, 235, 0.18),
+      rgba(37, 99, 235, 0.08)
+    );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.state-panel__skeleton span:nth-child(1) {
+  width: 78%;
+}
+
+.state-panel__skeleton span:nth-child(2) {
+  width: 92%;
+}
+
+.state-panel__skeleton span:nth-child(3) {
+  width: 64%;
 }
 
 .state-panel__action {
   justify-self: start;
-  border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
-  color: var(--color-surface-strong);
-  padding: 0.8rem 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
+  padding: 0.8rem 1rem;
+  border-radius: 0.9rem;
+  background: var(--color-text);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.state-panel__action:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.state-panel__action:active {
+  transform: translateY(1px);
 }
 </style>

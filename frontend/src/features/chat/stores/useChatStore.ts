@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { fetchConversations, fetchMessages } from '../services/chatApi'
+import { createConversation as createConversationRequest, fetchConversations, fetchMessages } from '../services/chatApi'
 import { stompChatClient } from '../services/stompClient'
 import type {
   ChatConnectionState,
@@ -16,6 +16,7 @@ export const useChatStore = defineStore('chat', () => {
   const messages = ref<ChatMessage[]>([])
   const loadingConversations = ref(false)
   const loadingMessages = ref(false)
+  const creatingConversation = ref(false)
   const error = ref<string | null>(null)
   const connectionState = ref<ChatConnectionState>('disconnected')
   const activeToken = ref<string | null>(null)
@@ -48,6 +49,34 @@ export const useChatStore = defineStore('chat', () => {
       error.value = caughtError instanceof Error ? caughtError.message : 'Failed to load conversations'
     } finally {
       loadingConversations.value = false
+    }
+  }
+
+  async function createConversation(title: string) {
+    if (!activeToken.value) {
+      return null
+    }
+
+    creatingConversation.value = true
+    error.value = null
+
+    try {
+      const response = await createConversationRequest(
+        {
+          title,
+          type: 'GROUP'
+        },
+        activeToken.value
+      )
+
+      conversations.value = [response.data, ...conversations.value.filter((item) => item.id !== response.data.id)]
+      await selectConversation(response.data.id)
+      return response.data
+    } catch (caughtError) {
+      error.value = caughtError instanceof Error ? caughtError.message : 'Failed to create conversation'
+      throw caughtError
+    } finally {
+      creatingConversation.value = false
     }
   }
 
@@ -104,7 +133,30 @@ export const useChatStore = defineStore('chat', () => {
       return
     }
 
+    if (messages.value.some((item) => item.id === message.id)) {
+      return
+    }
+
     messages.value = [...messages.value, message]
+
+    const currentConversation = conversations.value.find(
+      (conversation) => conversation.id === message.conversationId
+    )
+
+    if (!currentConversation) {
+      return
+    }
+
+    const updatedConversation: ConversationSummary = {
+      ...currentConversation,
+      updatedAt: message.sentAt,
+      lastMessagePreview: message.content
+    }
+
+    conversations.value = [
+      updatedConversation,
+      ...conversations.value.filter((conversation) => conversation.id !== updatedConversation.id)
+    ]
   }
 
   function sendMessage(payload: ChatInboundMessage) {
@@ -118,6 +170,7 @@ export const useChatStore = defineStore('chat', () => {
     messages.value = []
     error.value = null
     activeToken.value = null
+    creatingConversation.value = false
   }
 
   return {
@@ -127,10 +180,12 @@ export const useChatStore = defineStore('chat', () => {
     messages,
     loadingConversations,
     loadingMessages,
+    creatingConversation,
     error,
     connectionState,
     bootstrap,
     loadConversations,
+    createConversation,
     selectConversation,
     connectRealtime,
     disconnectRealtime,
